@@ -10,21 +10,44 @@ public class Folder {
     private LinkedList<String> all_folder_filepaths;            // Relative filepaths to the files beyond this folder describing each script <directory>/<filename>
     private LinkedList<File> all_package_files_edited;          // This is a list with all the package-files copied from the package-folder, and edited
     private File folder_directory;
+    private Documentation parent;
     /**
-     *
+     * @param parent {@link Documentation} Link back to the Documentation object inwhich this Folder-object is contained.
      * @param absolute_source_path {@link java.lang.String} Path to the main-folder where the <script>.js is located. (e.g. /home/anne/IdeaProjects/PlanYourProject/src/webapp/Scripts/Components)
      * @param absolute_destination_path {@link java.lang.String} Path to the main-folder where the <script>.html is located. (e.g. /home/anne/IdeaProjects/PlanYourProject/target/site/jsdoc/Components)
-     * @param foldername {@link java.lang.String} (i.e. Components)
      */
-    public Folder(String absolute_source_path,String absolute_destination_path, String foldername){
+    public Folder(Documentation parent, String absolute_source_path,String absolute_destination_path){
         this.absolute_source_path =  absolute_source_path;
         this.absolute_destination_path = absolute_destination_path;
-        this.foldername = foldername;
-        folder_directory = new File(foldername);
+        this.foldername = absolute_source_path.substring(absolute_source_path.lastIndexOf("/")+1);
+        folder_directory = new File(absolute_destination_path);
         folder_directory.mkdir();
         this.folder_scripts = new LinkedList<>();
         this.all_folder_filepaths = new LinkedList<>();
         this.all_package_files_edited = new LinkedList<>();
+        this.parent = parent;
+        copyPackageFiles();
+        parent.customizeFiles(absolute_destination_path);
+        replaceVariablesInFolderFiles();
+
+    }
+
+    String getProjectName(){
+        return parent.getProjectName();
+    }
+
+    String getToday(){
+        return parent.getToday();
+    }
+
+    Documentation getParent(){
+        return parent;
+    }
+
+    boolean addPathToAllFolderFilepaths(String path_to_file){
+        boolean result = false;
+        this.all_folder_filepaths.add(path_to_file);
+        return result;
     }
 
     /**
@@ -37,7 +60,7 @@ public class Folder {
         FileInputStream input_stream;
         FileOutputStream  output_stream;
         try {
-            package_folder = new File(absolute_destination_path + "/package");
+            package_folder = new File(absolute_destination_path.substring(0,absolute_destination_path.lastIndexOf("/"))+ "/package");
             package_files = package_folder.listFiles();
             for(int i=0;i < package_files.length;i++) {
                 input_stream = new FileInputStream(package_files[i]);
@@ -72,11 +95,14 @@ public class Folder {
                   ln = br.readLine();
                   while(ln != null){
                       if(ln.contains("{FOLDER_NAME}"))
-                          ln.replace("{FOLDER_NAME}", foldername);
+                          ln = ln.replace("{FOLDER_NAME}", foldername);
 
-                      bw.write(ln);
+                      bw.write(ln + "\n");
                       ln = br.readLine();
                   }
+                  br.close();
+                  bw.close();
+                  files[i].delete();
               }
           }
         }catch(Exception ex){
@@ -99,7 +125,7 @@ public class Folder {
     }
 
     boolean addScriptToCollection(Script script){
-        this.folder_scripts.add(script);
+        folder_scripts.add(script);
         return true;
     }
 
@@ -126,6 +152,7 @@ public class Folder {
             for (int i = 0; i < this.all_package_files_edited.size(); i++) {
                 input_file = this.all_package_files_edited.get(i);
                 reader = new BufferedReader(new FileReader(input_file));
+                writer = new BufferedWriter(new FileWriter(input_file));
                 line = reader.readLine();
                 while(line != null){
                     if(line.contains("Insert links")){

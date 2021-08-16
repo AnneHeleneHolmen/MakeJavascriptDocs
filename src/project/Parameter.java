@@ -1,7 +1,7 @@
 package project;
 
 public class Parameter extends Part {
-    String data_type;
+    private String data_type;
     Parameter(String type){
         super(type);
     }

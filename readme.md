@@ -44,7 +44,7 @@ Start of comment
 <td>
 </td>
 <td>
-The start of new lines within comments
+The start of new lines that are part of descriptions
 </td>
 </tr>
 <tr>
@@ -65,6 +65,19 @@ End of comment
 </td>
 <td>
 Tabulator must be used as a delimiter between the input-information
+</td>
+</tr>
+<tr>
+<td>
+<h5>Special characters in descriptions</h5>
+</td>
+<td>
+&#60;
+
+&#62;
+</td>
+<td>
+The listed characters are automatically replaced with the html-encoding
 </td>
 </tr>
 <tr>
